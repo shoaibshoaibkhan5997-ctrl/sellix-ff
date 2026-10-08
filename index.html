@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SELLIX FF - Buy & Sell Marketplace</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>SELLIX <span>FF</span></h1>
+<div class="tag">BUY - SELL - SHOWCASE</div>
+<div class="row" id="hr" style="display:none">
+<a class="btn" href="#buy">Buy karo</a>
+<a class="btn alt" href="#sell">Sell karo</a>
+</div>
+</header>
+
+<h2 id="su">Sign up karo</h2>
+<form id="suf">
+<div id="hi" class="note" style="display:none"></div>
+<input id="sn" placeholder="Aapka naam" required>
+<input id="sp" type="tel" inputmode="numeric" placeholder="Phone number" required>
+<input id="pw1" type="password" placeholder="Password banao (kam se kam 6)" required>
+<input id="pw2" type="password" placeholder="Password dobara likho" required>
+<div id="er" class="err"></div>
+<button class="btn" type="submit">Sign up</button>
+</form>
+
+<div id="main" style="display:none">
+<h2 id="buy">Available accounts / items</h2>
+<div class="tabs">
+<button class="tab on" data-f="all">Sab</button>
+<button class="tab" data-f="Account">Accounts</button>
+</div>
+<div class="grid" id="list"></div>
+
+<h2 id="sell">Apna item sell karo</h2>
+<form id="sf">
+<input id="n" placeholder="Aapka naam" required>
+<input id="ph" type="tel" placeholder="Phone number" required>
+<input id="ffid" placeholder="Free Fire ID" required>
+<select id="t"><option>Account</option></select>
+<input id="p" type="number" placeholder="Price (Rs)" required>
+<textarea id="d" rows="3" placeholder="Kyun sell kar rahe ho? (message)" required></textarea>
+<label style="font-size:14px;color:var(--muted)">ID ka screenshot</label>
+<input id="ss" type="file" accept="image/*">
+<img id="pv" alt="" style="display:none;max-width:100%;border-radius:8px">
+<button class="btn" type="submit">WhatsApp par bhejo</button>
+<div class="note" id="tip" style="display:none">WhatsApp khulne ke baad chat me screenshot attach karke bhej do.</div>
+</form>
+
+<h2>Safe deal tips</h2>
+<div class="note">Pehle video proof maango. Bade deal me middleman use karo. Advance paise bina proof ke mat bhejo.</div>
+
+<div class="row">
+<a class="btn alt" href="https://www.youtube.com/@SELLIXFF">YouTube</a>
+<a class="btn alt" id="wa" href="#">WhatsApp</a>
+</div>
+</div>
+<footer>SELLIX FF - Only Sellix</footer>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
