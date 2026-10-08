@@ -8,17 +8,33 @@ function $(id){ return document.getElementById(id); }
 function openSite(){ $("main").style.display = "block"; $("hr").style.display = "flex"; }
 
 function draw(f){
-  var L = items.filter(function(i){ return f === "all" || i.type === f; });
+  var L = items.filter(function(i){ return f === "all" || i.type === f; })
+    .sort(function(a, b){ return (a.sold ? 1 : 0) - (b.sold ? 1 : 0); });
   var h = "";
   if(!L.length) h = '<div class="empty">Abhi koi item list nahi hai. Jaldi naye items aayenge!</div>';
   L.forEach(function(i){
     var im = (i.imgs || []).map(function(u){ return '<img src="images/' + esc(u) + '" alt="">'; }).join("");
-    h += '<div class="card"><div class="imgs">' + im + '</div><h3>' + esc(i.title) + '</h3><p>' + esc(i.desc || "") + '</p><div class="price">Rs ' + esc(i.price) + '</div><a class="btn" href="' + wa("Mujhe ye chahiye: " + i.title + " (Rs " + i.price + ")") + '">Buy karo</a></div>';
+    var tag = i.sold ? '<span class="badge so">SOLD</span>' : '<span class="badge av">AVAILABLE</span>';
+    var act = i.sold
+      ? '<span class="btn dis">Sold ho chuka</span>'
+      : '<a class="btn" href="' + wa("Mujhe ye chahiye: " + i.title + " (Rs " + i.price + ")") + '">Buy karo</a>';
+    h += '<div class="card' + (i.sold ? ' sold' : '') + '"><div class="imgwrap">' + tag + '<div class="imgs">' + im + '</div></div><h3>' + esc(i.title) + '</h3><p>' + esc(i.desc || "") + '</p><div class="price">Rs ' + esc(i.price) + '</div>' + act + '</div>';
   });
   $("list").innerHTML = h;
 }
 
+function drawProofs(list){
+  if(!list || !list.length) return;
+  var h = "";
+  list.forEach(function(p){
+    h += '<div class="card proof">' + (p.img ? '<img src="images/' + esc(p.img) + '" alt="">' : '') + '<p style="color:var(--text)">' + esc(p.text || "") + '</p><div class="who">- ' + esc(p.name || "Customer") + '</div></div>';
+  });
+  $("proofs").innerHTML = h;
+  $("proofbox").style.display = "block";
+}
+
 fetch("items.json").then(function(r){ return r.json(); }).then(function(j){ items = j; draw("all"); }).catch(function(){ draw("all"); });
+fetch("proofs.json").then(function(r){ return r.json(); }).then(drawProofs).catch(function(){});
 
 document.querySelectorAll("#main .tab").forEach(function(b){
   b.onclick = function(){
@@ -58,7 +74,6 @@ $("lo").onclick = function(){
   location.reload();
 };
 
-/* purana sign up wala data naye system me le aao */
 try{
   var old = JSON.parse(localStorage.getItem("sx") || "null");
   if(old && old.ph && old.h){
@@ -68,7 +83,6 @@ try{
   }
 }catch(e){}
 
-/* page khulte hi: pehle se login ho to seedha andar */
 var accs = getAcc();
 var cur = null;
 try{ cur = localStorage.getItem("cur"); }catch(e){}
@@ -78,7 +92,6 @@ if(cur && accs[cur]){
   showMode(Object.keys(accs).length ? "l" : "s");
 }
 
-/* Sign up */
 $("suf").onsubmit = async function(e){
   e.preventDefault();
   var er = $("er"); er.style.display = "none";
@@ -96,7 +109,6 @@ $("suf").onsubmit = async function(e){
   window.open(wa("SIGN UP\nNaam: " + $("sn").value + "\nPhone: " + ph), "_blank");
 };
 
-/* Login */
 $("lf").onsubmit = async function(e){
   e.preventDefault();
   var er = $("er1"); er.style.display = "none";
@@ -112,7 +124,6 @@ $("lf").onsubmit = async function(e){
   window.scrollTo(0, 0);
 };
 
-/* Sell form */
 $("ss").onchange = function(){
   var f = this.files[0], v = $("pv");
   if(f){ v.src = URL.createObjectURL(f); v.style.display = "block"; } else { v.style.display = "none"; }
