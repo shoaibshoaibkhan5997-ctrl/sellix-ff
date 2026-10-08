@@ -1,4 +1,4 @@
-:root{--bg:#0a0a0a;--card:#161616;--line:#2a2a2a;--text:#f4f4f4;--muted:#a0a0a0;--y:#ffc800}
+root{--bg:#0a0a0a;--card:#161616;--line:#2a2a2a;--text:#f4f4f4;--muted:#a0a0a0;--y:#ffc800}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;line-height:1.5}
 .wrap{max-width:900px;margin:0 auto;padding:16px}
@@ -8,6 +8,7 @@ h1 span{color:var(--y)}
 .tag{color:var(--muted);font-size:14px;letter-spacing:2px}
 .btn{display:inline-block;background:var(--y);color:#000;border:0;padding:12px 20px;border-radius:8px;font-weight:700;font-size:15px;text-decoration:none;cursor:pointer}
 .btn.alt{background:transparent;color:var(--y);border:1px solid var(--y)}
+.btn.dis{background:#2a2a2a;color:#888;cursor:not-allowed}
 .row{display:flex;gap:10px;justify-content:center;margin:16px 0;flex-wrap:wrap}
 h2{border-left:4px solid var(--y);padding-left:10px;font-size:20px;margin:28px 0 12px}
 .tabs{display:flex;gap:8px;margin-bottom:12px}
@@ -22,7 +23,14 @@ form{background:var(--card);border:1px solid var(--line);border-radius:12px;padd
 input,select,textarea{width:100%;background:#0f0f0f;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:11px;font-size:16px;font-family:inherit}
 .note{background:#1a1500;border:1px solid #4a3d00;border-radius:10px;padding:12px;font-size:14px;color:#e8d98a}
 .empty{color:var(--muted);text-align:center;padding:30px 10px;border:1px dashed var(--line);border-radius:12px}
-.imgs{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;margin-bottom:10px}
+.imgwrap{position:relative;margin-bottom:10px}
+.imgs{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory}
 .imgs img{width:100%;flex:0 0 100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;scroll-snap-align:start}
+.badge{position:absolute;top:8px;left:8px;z-index:1;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.badge.av{background:#12361a;color:#5dff8a;border:1px solid #1f6b30}
+.badge.so{background:#3a0f0f;color:#ff8a8a;border:1px solid #7a2020}
+.card.sold .imgs img{filter:grayscale(1) brightness(.6)}
+.proof img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;margin-bottom:8px}
+.proof .who{color:var(--y);font-weight:700;font-size:14px}
 .err{display:none;color:#ff8a8a;font-size:14px}
-footer{text-align:center;color:var(--muted);font-size:13px;padding:24px 0}
+footer{text-align:center;color:var(--muted);font-size:13px;
