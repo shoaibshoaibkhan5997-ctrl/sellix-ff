@@ -1,11 +1,12 @@
 var NUM = "917081573944";
 
 var items = [];
+var loggedIn = false;
 function wa(m){ return "https://wa.me/" + NUM + "?text=" + encodeURIComponent(m); }
 function esc(x){ return String(x).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function $(id){ return document.getElementById(id); }
 
-function openSite(){ $("main").style.display = "block"; $("hr").style.display = "flex"; }
+function openSite(){ $("main").style.display = "block"; }
 
 function draw(f){
   var L = items.filter(function(i){ return f === "all" || i.type === f; })
@@ -27,7 +28,7 @@ function drawProofs(list){
   if(!list || !list.length) return;
   var h = "";
   list.forEach(function(p){
-    h += '<div class="card proof">' + (p.img ? '<img src="images/' + esc(p.img) + '" alt="">' : '') + '<p style="color:var(--text)">' + esc(p.text || "") + '</p><div class="who">- ' + esc(p.name || "Customer") + '</div></div>';
+    h += '<div class="card proof">' + (p.img ? '<img src="images/' + esc(p.img) + '" alt="">' : '') + '<p>' + esc(p.text || "") + '</p><div class="who">- ' + esc(p.name || "Customer") + '</div></div>';
   });
   $("proofs").innerHTML = h;
   $("proofbox").style.display = "block";
@@ -43,7 +44,16 @@ document.querySelectorAll("#main .tab").forEach(function(b){
   };
 });
 
-/* ---------- Accounts (is phone ke browser me save hote hain) ---------- */
+function needLogin(e){
+  if(!loggedIn){
+    e.preventDefault();
+    $("gate").style.display = "block";
+    $("su").scrollIntoView();
+  }
+}
+$("bb").onclick = needLogin;
+$("bs").onclick = needLogin;
+
 function getAcc(){ try{ return JSON.parse(localStorage.getItem("acc") || "{}"); }catch(e){ return {}; } }
 function setAcc(a){ try{ localStorage.setItem("acc", JSON.stringify(a)); }catch(e){} }
 
@@ -55,15 +65,24 @@ async function sha(s){
 function showMode(m){
   $("lf").style.display = (m === "l") ? "grid" : "none";
   $("suf").style.display = (m === "s") ? "grid" : "none";
-  $("tl").classList.toggle("on", m === "l");
-  $("ts").classList.toggle("on", m === "s");
+  $("su").textContent = (m === "l") ? "Login karo" : "Sign up karo";
+  $("swl").textContent = (m === "l") ? "Naya account banana hai? Sign up karo" : "Pehle se account hai? Login karo";
+  $("swl").dataset.m = m;
 }
-$("tl").onclick = function(){ showMode("l"); };
-$("ts").onclick = function(){ showMode("s"); };
+$("swl").onclick = function(e){
+  e.preventDefault();
+  showMode(this.dataset.m === "l" ? "s" : "l");
+};
+$("bsu").onclick = function(){
+  if(!loggedIn) showMode("s");
+};
 
 function enter(phone, name){
+  loggedIn = true;
   try{ localStorage.setItem("cur", phone); }catch(e){}
   $("auth").style.display = "none";
+  $("gate").style.display = "none";
+  $("bsu").style.display = "none";
   $("bar").style.display = "flex";
   $("wel").textContent = "Welcome, " + name + "!";
   openSite();
