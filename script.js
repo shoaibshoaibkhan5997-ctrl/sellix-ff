@@ -20,23 +20,65 @@ function draw(f){
 
 fetch("items.json").then(function(r){ return r.json(); }).then(function(j){ items = j; draw("all"); }).catch(function(){ draw("all"); });
 
-document.querySelectorAll(".tab").forEach(function(b){
+document.querySelectorAll("#main .tab").forEach(function(b){
   b.onclick = function(){
-    document.querySelectorAll(".tab").forEach(function(x){ x.classList.remove("on"); });
+    document.querySelectorAll("#main .tab").forEach(function(x){ x.classList.remove("on"); });
     b.classList.add("on"); draw(b.dataset.f);
   };
 });
 
+/* ---------- Accounts (is phone ke browser me save hote hain) ---------- */
+function getAcc(){ try{ return JSON.parse(localStorage.getItem("acc") || "{}"); }catch(e){ return {}; } }
+function setAcc(a){ try{ localStorage.setItem("acc", JSON.stringify(a)); }catch(e){} }
+
+async function sha(s){
+  var buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(function(x){ return x.toString(16).padStart(2, "0"); }).join("");
+}
+
+function showMode(m){
+  $("lf").style.display = (m === "l") ? "grid" : "none";
+  $("suf").style.display = (m === "s") ? "grid" : "none";
+  $("tl").classList.toggle("on", m === "l");
+  $("ts").classList.toggle("on", m === "s");
+}
+$("tl").onclick = function(){ showMode("l"); };
+$("ts").onclick = function(){ showMode("s"); };
+
+function enter(phone, name){
+  try{ localStorage.setItem("cur", phone); }catch(e){}
+  $("auth").style.display = "none";
+  $("bar").style.display = "flex";
+  $("wel").textContent = "Welcome, " + name + "!";
+  openSite();
+}
+
+$("lo").onclick = function(){
+  try{ localStorage.removeItem("cur"); }catch(e){}
+  location.reload();
+};
+
+/* purana sign up wala data naye system me le aao */
 try{
-  var sv = JSON.parse(localStorage.getItem("sx") || "null");
-  if(sv){
-    openSite();
-    var h = $("hi"); h.style.display = "block"; h.textContent = "Welcome back, " + sv.n + "!";
-    $("suf").querySelectorAll("input,button").forEach(function(x){ x.style.display = "none"; });
-    $("su").textContent = "Welcome";
+  var old = JSON.parse(localStorage.getItem("sx") || "null");
+  if(old && old.ph && old.h){
+    var a0 = getAcc();
+    if(!a0[old.ph]){ a0[old.ph] = { n: old.n, h: old.h }; setAcc(a0); }
+    localStorage.removeItem("sx");
   }
 }catch(e){}
 
+/* page khulte hi: pehle se login ho to seedha andar */
+var accs = getAcc();
+var cur = null;
+try{ cur = localStorage.getItem("cur"); }catch(e){}
+if(cur && accs[cur]){
+  enter(cur, accs[cur].n);
+}else{
+  showMode(Object.keys(accs).length ? "l" : "s");
+}
+
+/* Sign up */
 $("suf").onsubmit = async function(e){
   e.preventDefault();
   var er = $("er"); er.style.display = "none";
@@ -45,16 +87,32 @@ $("suf").onsubmit = async function(e){
   if(ph.length < 10) return bad("Sahi phone number daalo (10 digit).");
   if($("pw1").value.length < 6) return bad("Password kam se kam 6 akshar ka rakho.");
   if($("pw1").value !== $("pw2").value) return bad("Dono password same nahi hain. Dobara likho.");
-  var hs = "";
-  try{
-    var buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode($("pw1").value));
-    hs = Array.from(new Uint8Array(buf)).map(function(x){ return x.toString(16).padStart(2, "0"); }).join("");
-  }catch(x){}
-  try{ localStorage.setItem("sx", JSON.stringify({ n: $("sn").value, ph: ph, h: hs })); }catch(x){}
-  openSite(); $("main").scrollIntoView();
+  var a = getAcc();
+  if(a[ph]) return bad("Ye number pehle se registered hai. Login karo.");
+  a[ph] = { n: $("sn").value, h: await sha($("pw1").value) };
+  setAcc(a);
+  enter(ph, $("sn").value);
+  window.scrollTo(0, 0);
   window.open(wa("SIGN UP\nNaam: " + $("sn").value + "\nPhone: " + ph), "_blank");
 };
 
+/* Login */
+$("lf").onsubmit = async function(e){
+  e.preventDefault();
+  var er = $("er1"); er.style.display = "none";
+  var ph = $("lp").value.replace(/\D/g, "");
+  var a = getAcc();
+  var hs = await sha($("lpw").value);
+  if(!a[ph] || a[ph].h !== hs){
+    er.textContent = "Number ya password galat hai.";
+    er.style.display = "block";
+    return;
+  }
+  enter(ph, a[ph].n);
+  window.scrollTo(0, 0);
+};
+
+/* Sell form */
 $("ss").onchange = function(){
   var f = this.files[0], v = $("pv");
   if(f){ v.src = URL.createObjectURL(f); v.style.display = "block"; } else { v.style.display = "none"; }
