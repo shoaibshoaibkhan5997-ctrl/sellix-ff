@@ -1,4 +1,4 @@
-root{--bg:#0a0a0a;--card:#161616;--line:#2a2a2a;--text:#f4f4f4;--muted:#a0a0a0;--y:#ffc800}
+:root{--bg:#0a0a0a;--card:#161616;--line:#2a2a2a;--text:#f4f4f4;--muted:#a0a0a0;--y:#ffc800}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;line-height:1.5}
 .wrap{max-width:900px;margin:0 auto;padding:16px}
@@ -33,4 +33,4 @@ input,select,textarea{width:100%;background:#0f0f0f;color:var(--text);border:1px
 .proof img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;margin-bottom:8px}
 .proof .who{color:var(--y);font-weight:700;font-size:14px}
 .err{display:none;color:#ff8a8a;font-size:14px}
-footer{text-align:center;color:var(--muted);font-size:13px;
+footer{text-align:center;color:var(--muted);font-size:13px;padding:24px 0}
