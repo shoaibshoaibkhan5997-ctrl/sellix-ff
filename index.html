@@ -17,9 +17,20 @@
 </div>
 </header>
 
-<h2 id="su">Sign up karo</h2>
+<div id="auth">
+<div class="tabs" style="margin-top:24px">
+<button class="tab" id="tl" type="button">Login</button>
+<button class="tab on" id="ts" type="button">Sign up</button>
+</div>
+
+<form id="lf" style="display:none">
+<input id="lp" type="tel" inputmode="numeric" placeholder="Mobile number" required>
+<input id="lpw" type="password" placeholder="Password" required>
+<div id="er1" class="err"></div>
+<button class="btn" type="submit">Login</button>
+</form>
+
 <form id="suf">
-<div id="hi" class="note" style="display:none"></div>
 <input id="sn" placeholder="Aapka naam" required>
 <input id="sp" type="tel" inputmode="numeric" placeholder="Phone number" required>
 <input id="pw1" type="password" placeholder="Password banao (kam se kam 6)" required>
@@ -27,6 +38,12 @@
 <div id="er" class="err"></div>
 <button class="btn" type="submit">Sign up</button>
 </form>
+</div>
+
+<div id="bar" class="note" style="display:none;margin-top:16px;display:none;justify-content:space-between;align-items:center;gap:10px">
+<span id="wel"></span>
+<button class="btn alt" id="lo" type="button" style="padding:8px 14px">Logout</button>
+</div>
 
 <div id="main" style="display:none">
 <h2 id="buy">Available accounts / items</h2>
