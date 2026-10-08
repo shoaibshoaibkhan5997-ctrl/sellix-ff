@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="hi">
 <head>
 <meta charset="utf-8">
@@ -10,17 +11,17 @@
 <header>
 <h1>SELLIX <span>FF</span></h1>
 <div class="tag">BUY - SELL - SHOWCASE</div>
-<div class="row" id="hr" style="display:none">
-<a class="btn" href="#buy">Buy karo</a>
-<a class="btn alt" href="#sell">Sell karo</a>
+<div class="row" id="hr">
+<a class="btn" href="#buy" id="bb">Buy karo</a>
+<a class="btn alt" href="#sell" id="bs">Sell karo</a>
+<a class="btn alt" href="#su" id="bsu">Sign up</a>
 </div>
 </header>
 
+<div id="gate" class="note" style="display:none;margin-top:12px">Pehle Sign up ya Login karo, uske baad Buy/Sell khulega.</div>
+
 <div id="auth">
-<div class="tabs" style="margin-top:24px">
-<button class="tab" id="tl" type="button">Login</button>
-<button class="tab on" id="ts" type="button">Sign up</button>
-</div>
+<h2 id="su">Sign up karo</h2>
 
 <form id="lf" style="display:none">
 <input id="lp" type="tel" inputmode="numeric" placeholder="Mobile number" required>
@@ -37,9 +38,11 @@
 <div id="er" class="err"></div>
 <button class="btn" type="submit">Sign up</button>
 </form>
+
+<p style="text-align:center;margin:14px 0"><a id="swl" href="#" style="color:#fff;text-decoration:underline;font-size:15px">Pehle se account hai? Login karo</a></p>
 </div>
 
-<div id="bar" class="note" style="display:none;margin-top:16px;display:none;justify-content:space-between;align-items:center;gap:10px">
+<div id="bar" class="note" style="display:none;margin-top:16px;justify-content:space-between;align-items:center;gap:10px">
 <span id="wel"></span>
 <button class="btn alt" id="lo" type="button" style="padding:8px 14px">Logout</button>
 </div>
@@ -52,6 +55,11 @@
 </div>
 <div class="grid" id="list"></div>
 
+<div id="proofbox" style="display:none">
+<h2>Proof / Customer reviews</h2>
+<div class="grid" id="proofs"></div>
+</div>
+
 <h2 id="sell">Apna item sell karo</h2>
 <form id="sf">
 <input id="n" placeholder="Aapka naam" required>
@@ -60,7 +68,7 @@
 <select id="t"><option>Account</option></select>
 <input id="p" type="number" placeholder="Price (Rs)" required>
 <textarea id="d" rows="3" placeholder="Kyun sell kar rahe ho? (message)" required></textarea>
-<label style="font-size:14px;color:var(--muted)">ID ka screenshot</label>
+<label style="font-size:14px">ID ka screenshot</label>
 <input id="ss" type="file" accept="image/*">
 <img id="pv" alt="" style="display:none;max-width:100%;border-radius:8px">
 <button class="btn" type="submit">WhatsApp par bhejo</button>
