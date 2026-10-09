@@ -6,15 +6,55 @@ function wa(m){ return "https://wa.me/" + NUM + "?text=" + encodeURIComponent(m)
 function esc(x){ return String(x).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function $(id){ return document.getElementById(id); }
 
+var FB_KEY = "AIzaSyB8uGrxTOTE2KixYo9pIR7sJ5Adx1Vfo88";
+var FB_PROJECT = "sellix-ff";
+
+function imgSrc(u){ return /^data:/.test(u) ? u : "images/" + u; }
+
+function fv(v){
+  if(!v) return null;
+  if("stringValue" in v) return v.stringValue;
+  if("integerValue" in v) return Number(v.integerValue);
+  if("doubleValue" in v) return v.doubleValue;
+  if("booleanValue" in v) return v.booleanValue;
+  if("timestampValue" in v) return v.timestampValue;
+  if("arrayValue" in v) return (v.arrayValue.values || []).map(fv);
+  if("mapValue" in v){
+    var o = {}, f = v.mapValue.fields || {};
+    Object.keys(f).forEach(function(k){ o[k] = fv(f[k]); });
+    return o;
+  }
+  return null;
+}
+
+function fbList(name, token, acc){
+  acc = acc || [];
+  var url = "https://firestore.googleapis.com/v1/projects/" + FB_PROJECT + "/databases/(default)/documents/" + name + "?pageSize=300&key=" + FB_KEY + (token ? "&pageToken=" + encodeURIComponent(token) : "");
+  return fetch(url).then(function(r){
+    if(!r.ok) throw new Error("firestore " + r.status);
+    return r.json();
+  }).then(function(j){
+    (j.documents || []).forEach(function(d){
+      var o = {}, f = d.fields || {};
+      Object.keys(f).forEach(function(k){ o[k] = fv(f[k]); });
+      acc.push(o);
+    });
+    if(j.nextPageToken && acc.length < 1000) return fbList(name, j.nextPageToken, acc);
+    return acc;
+  });
+}
+
+function newestFirst(a, b){ return String(b.createdAt || "").localeCompare(String(a.createdAt || "")); }
+
 function openSite(){ $("main").style.display = "block"; }
 
 function draw(f){
-  var L = items.filter(function(i){ return f === "all" || i.type === f; })
+  var L = items.filter(function(i){ return f === "all" || !i.type || i.type === f; })
     .sort(function(a, b){ return (a.sold ? 1 : 0) - (b.sold ? 1 : 0); });
   var h = "";
   if(!L.length) h = '<div class="empty">Abhi koi item list nahi hai. Jaldi naye items aayenge!</div>';
   L.forEach(function(i){
-    var im = (i.imgs || []).map(function(u){ return '<img src="images/' + esc(u) + '" alt="">'; }).join("");
+    var im = (i.imgs || []).map(function(u){ return '<img src="' + esc(imgSrc(u)) + '" alt="">'; }).join("");
     var tag = i.sold ? '<span class="badge so">SOLD</span>' : '<span class="badge av">AVAILABLE</span>';
     var act = i.sold
       ? '<span class="btn dis">Sold ho chuka</span>'
@@ -28,14 +68,36 @@ function drawProofs(list){
   if(!list || !list.length) return;
   var h = "";
   list.forEach(function(p){
-    h += '<div class="card proof">' + (p.img ? '<img src="images/' + esc(p.img) + '" alt="">' : '') + '<p>' + esc(p.text || "") + '</p><div class="who">- ' + esc(p.name || "Customer") + '</div></div>';
+    h += '<div class="card proof">' + (p.img ? '<img src="' + esc(imgSrc(p.img)) + '" alt="">' : '') + '<p>' + esc(p.text || "") + '</p><div class="who">- ' + esc(p.name || "Customer") + '</div></div>';
   });
   $("proofs").innerHTML = h;
   $("proofbox").style.display = "block";
 }
 
-fetch("items.json").then(function(r){ return r.json(); }).then(function(j){ items = j; draw("all"); }).catch(function(){ draw("all"); });
-fetch("proofs.json").then(function(r){ return r.json(); }).then(drawProofs).catch(function(){});
+function loadJson(f){
+  return fetch(f).then(function(r){ return r.json(); }).then(function(j){ return Array.isArray(j) ? j : []; }).catch(function(){ return []; });
+}
+
+Promise.all([
+  fbList("items").catch(function(){ return []; }),
+  loadJson("items.json")
+]).then(function(r){
+  var fb = r[0].sort(newestFirst).map(function(d){
+    return { title: d.title, desc: d.desc, price: d.price, sold: d.sold, type: d.type, imgs: d.photos || [] };
+  });
+  items = fb.concat(r[1]);
+  draw("all");
+});
+
+Promise.all([
+  fbList("proofs").catch(function(){ return []; }),
+  loadJson("proofs.json")
+]).then(function(r){
+  var fb = r[0].sort(newestFirst).map(function(d){
+    return { name: d.name, text: d.text, img: d.photo || "" };
+  });
+  drawProofs(fb.concat(r[1]));
+});
 
 document.querySelectorAll("#main .tab").forEach(function(b){
   b.onclick = function(){
