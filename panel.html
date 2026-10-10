@@ -1,11 +1,836 @@
 <!DOCTYPE html>
-<html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="refresh" content="0;url=admin/"><meta name="robots" content="noindex">
-<title>SELLIX FF Admin</title></head>
-<body style="background:#0a0a0a;color:#f4f4f4;font-family:Arial,sans-serif;padding:24px">
-<p>Admin panel yahan shift ho gaya hai: <a style="color:#ffc800" href="admin/">admin/</a></p>
-<script>location.replace("admin/");</script>
-</body></html>
-<!-- dashboard page -->
-<!DOCTYPE html>
-<html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>SELLIX FF - Admin Panel</title>
+<style>
+:root{--bg:#0a0a0a;--card:#161616;--card2:#1d1d1d;--line:#2a2a2a;--text:#f4f4f4;--muted:#a0a0a0;--y:#ffc800;--red:#ff4d4d;--ok:#3ccf91;--side:240px}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:16px/1.5 Arial,sans-serif}
+.hidden{display:none!important}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:11px 16px;background:var(--y);color:#000;font-weight:700}
+button.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+button.danger{background:transparent;color:var(--red);border:1px solid var(--red)}
+button.sm{padding:6px 10px;font-size:13px}
+button:disabled{opacity:.5;cursor:default}
+input,select,textarea{width:100%;background:#0f0f0f;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:11px;font:inherit}
+input[type=file]{padding:8px;color:var(--muted);font-size:14px}
+textarea{min-height:84px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--y);outline-offset:1px}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+h1,h2,h3{margin:0}
+h2{font-size:20px;border-left:4px solid var(--y);padding-left:10px;margin-bottom:16px}
+h3{font-size:16px}
+
+/* login */
+.loginbox{max-width:420px;margin:8vh auto;padding:20px}
+.brand{font-family:Impact,Arial Black,sans-serif;font-style:italic;font-size:34px;letter-spacing:1px}
+.brand span{color:var(--y)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+
+/* layout */
+#side{position:fixed;inset:0 auto 0 0;width:var(--side);background:#101010;border-right:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;z-index:30}
+#side .brand{font-size:26px;padding:0 8px}
+#side .sub{color:var(--muted);font-size:12px;letter-spacing:2px;padding:0 8px 14px}
+.nav{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;color:var(--text);font-weight:500;padding:11px 12px;border-radius:8px}
+.nav:hover{background:var(--card2)}
+.nav.on{background:var(--y);color:#000;font-weight:700}
+.sep{height:1px;background:var(--line);margin:10px 4px}
+.grp{color:var(--muted);font-size:11px;letter-spacing:2px;padding:6px 12px 2px}
+#main{margin-left:var(--side);padding:20px;max-width:1100px}
+#topbar{display:none;position:sticky;top:0;z-index:20;background:#101010;border-bottom:1px solid var(--line);padding:10px 14px;align-items:center;gap:12px}
+#topbar button{padding:8px 12px}
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:25}
+@media(max-width:860px){
+  #side{transform:translateX(-100%);transition:transform .2s}
+  body.open #side{transform:none}
+  body.open #overlay{display:block}
+  #main{margin-left:0;padding:14px}
+  #topbar{display:flex}
+}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stat .k{color:var(--muted);font-size:13px}
+.stat .v{font-size:26px;font-weight:700;margin-top:4px;overflow-wrap:anywhere}
+.bar{height:12px;background:#0f0f0f;border:1px solid var(--line);border-radius:99px;overflow:hidden;margin:10px 0}
+.bar>i{display:block;height:100%;background:var(--y);width:0}
+.bar>i.full{background:var(--red)}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:700}
+.pill.open{background:#12301f;color:var(--ok)}
+.pill.closed{background:#3a1a1a;color:var(--red)}
+.pill.live{background:#2e2600;color:var(--y)}
+.pill.other{background:#222;color:var(--muted)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:10px}
+.kv div span{display:block;color:var(--muted);font-size:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>*{flex:0 0 auto}
+.row>.grow{flex:1 1 200px}
+.msg{padding:10px 12px;border-radius:8px;margin-top:12px;font-size:14px}
+.msg.err{background:#3a1a1a;color:#ffb3b3}
+.msg.ok{background:#12301f;color:#a8f0cf}
+.empty{color:var(--muted);text-align:center;padding:22px 8px;border:1px dashed var(--line);border-radius:12px}
+
+/* tables */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:820px;font-size:14px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;background:#111}
+tr:last-child td{border-bottom:0}
+td.acts{display:flex;gap:6px}
+
+/* tournament cards + items */
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.item{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item img{width:72px;height:72px;object-fit:cover;border-radius:8px;flex:none;background:#0f0f0f}
+.item .info{flex:1;min-width:0}
+.item .t{font-weight:700;overflow-wrap:anywhere}
+.item .m{color:var(--muted);font-size:14px;overflow-wrap:anywhere}
+.acts2{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.thumbs{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.thumbs img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.check{display:flex;align-items:center;gap:10px;margin-top:14px;color:var(--text);font-size:16px}
+.check input{width:20px;height:20px}
+
+/* modal + toast */
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+#modal.on{display:flex}
+#modal .box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;width:100%;max-width:440px;margin-top:5vh}
+#toast{position:fixed;left:16px;right:16px;bottom:16px;max-width:520px;margin:0 auto;padding:12px 14px;border-radius:10px;background:var(--ok);color:#06210f;font-weight:700;display:none;text-align:center;z-index:60}
+#toast.err{background:var(--red);color:#2a0606}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginView" class="hidden">
+  <div class="loginbox">
+    <div class="brand">SELLIX <span>FF</span></div>
+    <div style="color:var(--muted);letter-spacing:2px;font-size:12px;margin:2px 0 18px">ADMIN PANEL</div>
+    <div class="panel">
+      <h3>Admin login</h3>
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username" inputmode="email">
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password">
+      <div class="row" style="margin-top:14px"><button id="loginBtn" style="flex:1">Login</button></div>
+      <div id="loginMsg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appView" class="hidden">
+  <div id="topbar">
+    <button class="ghost" id="burger" aria-label="Menu">☰</button>
+    <div class="brand" style="font-size:22px">SELLIX <span>FF</span></div>
+  </div>
+  <div id="overlay"></div>
+
+  <nav id="side">
+    <div class="brand">SELLIX <span>FF</span></div>
+    <div class="sub">ADMIN PANEL</div>
+    <button class="nav on" data-v="dashboard">📊 Dashboard</button>
+    <button class="nav" data-v="tournaments">🏆 Tournaments</button>
+    <button class="nav" data-v="registrations">👥 Registrations</button>
+    <button class="nav" data-v="settings">⚙️ Tournament Settings</button>
+    <button class="nav" data-v="export">📥 Export CSV</button>
+    <div class="sep"></div>
+    <div class="grp">STORE</div>
+    <button class="nav" data-v="items">🛒 Items</button>
+    <button class="nav" data-v="proofs">⭐ Proofs</button>
+    <div class="sep"></div>
+    <a class="nav" href="./" style="text-decoration:none">🌐 Site dekho</a>
+    <button class="nav" id="logoutBtn">🚪 Logout</button>
+  </nav>
+
+  <main id="main">
+
+    <!-- DASHBOARD -->
+    <section id="v-dashboard">
+      <h2>Dashboard</h2>
+      <div class="stats">
+        <div class="stat"><div class="k">🏆 Total Tournaments</div><div class="v" id="sTournaments">-</div></div>
+        <div class="stat"><div class="k">👥 Total Players</div><div class="v" id="sPlayers">-</div></div>
+        <div class="stat"><div class="k">🟢 Live Tournament</div><div class="v" id="sLive">-</div></div>
+        <div class="stat"><div class="k">💰 Prize Pool</div><div class="v" id="sPrize">-</div></div>
+      </div>
+      <div class="panel" id="currentCard"><div class="empty">Load ho raha hai...</div></div>
+    </section>
+
+    <!-- TOURNAMENTS -->
+    <section id="v-tournaments" class="hidden">
+      <div class="row" style="justify-content:space-between;margin-bottom:16px">
+        <h2 style="margin:0">Tournaments</h2>
+        <button id="newTBtn">+ Naya Tournament</button>
+      </div>
+      <div id="tList" class="tgrid"></div>
+    </section>
+
+    <!-- REGISTRATIONS -->
+    <section id="v-registrations" class="hidden">
+      <h2>Registrations</h2>
+      <div class="row" style="margin-bottom:10px">
+        <select id="rTour" class="grow"></select>
+        <input id="rSearch" class="grow" type="search" placeholder="🔎 Name / UID / Mobile se search">
+        <button id="rAdd">+ Player add</button>
+      </div>
+      <div id="rCount" style="color:var(--muted);margin-bottom:10px;font-size:14px"></div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Full Name</th><th>Free Fire UID</th><th>In-Game Name</th><th>Mobile</th><th>Email</th><th>Tournament</th><th>Date</th><th>Action</th></tr></thead>
+          <tbody id="rBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="v-settings" class="hidden">
+      <h2 id="setTitle">Tournament Settings</h2>
+      <div class="panel">
+        <label for="setPick">Tournament chuno</label>
+        <select id="setPick"></select>
+        <label for="sName">Tournament Name</label>
+        <input id="sName" type="text" placeholder="Free Fire Clash Squad">
+        <label for="sPrizeIn">Prize Pool (₹)</label>
+        <input id="sPrizeIn" type="number" inputmode="numeric" min="0">
+        <label for="sMax">Maximum Players</label>
+        <input id="sMax" type="number" inputmode="numeric" min="1">
+        <label for="sDate">Tournament Date</label>
+        <input id="sDate" type="date">
+        <label for="sStatus">Tournament Status</label>
+        <select id="sStatus">
+          <option value="upcoming">Upcoming</option>
+          <option value="live">Live</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <label for="sReg">Registration</label>
+        <select id="sReg">
+          <option value="open">Open</option>
+          <option value="closed">Closed (manual)</option>
+        </select>
+        <div class="row" style="margin-top:16px">
+          <button id="sSave">Save karo</button>
+          <button class="ghost" id="sDelete">Tournament delete</button>
+        </div>
+        <div id="sMsg"></div>
+      </div>
+    </section>
+
+    <!-- EXPORT -->
+    <section id="v-export" class="hidden">
+      <h2>Export CSV</h2>
+      <div class="panel">
+        <label for="eTour">Tournament chuno</label>
+        <select id="eTour"></select>
+        <div id="eInfo" style="color:var(--muted);margin:10px 0"></div>
+        <button id="eBtn">📥 CSV download karo</button>
+      </div>
+    </section>
+
+    <!-- ITEMS -->
+    <section id="v-items" class="hidden">
+      <h2>Items</h2>
+      <div class="panel">
+        <h3 id="itemFormTitle">Naya item add karo</h3>
+        <label for="iTitle">Item ka naam</label>
+        <input id="iTitle" type="text" placeholder="Jaise: Level 70 account">
+        <label for="iPrice">Price (₹)</label>
+        <input id="iPrice" type="number" inputmode="numeric" min="0">
+        <label for="iDesc">Details</label>
+        <textarea id="iDesc" placeholder="Level, rank, elite pass, diamonds, etc."></textarea>
+        <label for="iPhotos">Photos (max 3)</label>
+        <input id="iPhotos" type="file" accept="image/*" multiple>
+        <div class="thumbs" id="iThumbs"></div>
+        <label class="check"><input id="iSold" type="checkbox"> Sold ho chuka hai</label>
+        <div class="row" style="margin-top:14px">
+          <button id="itemSaveBtn">Item save karo</button>
+          <button class="ghost hidden" id="itemCancelBtn">Cancel</button>
+        </div>
+        <div id="itemMsg"></div>
+      </div>
+      <div class="panel"><h3 style="margin-bottom:8px">Saare items</h3><div id="itemList"><div class="empty">Load ho raha hai...</div></div></div>
+    </section>
+
+    <!-- PROOFS -->
+    <section id="v-proofs" class="hidden">
+      <h2>Proofs / Reviews</h2>
+      <div class="panel">
+        <h3>Naya proof add karo</h3>
+        <label for="pName">Customer ka naam</label>
+        <input id="pName" type="text">
+        <label for="pText">Review</label>
+        <textarea id="pText"></textarea>
+        <label for="pPhoto">Screenshot (optional)</label>
+        <input id="pPhoto" type="file" accept="image/*">
+        <div class="thumbs" id="pThumbs"></div>
+        <div class="row" style="margin-top:14px"><button id="proofSaveBtn">Proof save karo</button></div>
+        <div id="proofMsg"></div>
+      </div>
+      <div class="panel"><h3 style="margin-bottom:8px">Saare proofs</h3><div id="proofList"><div class="empty">Load ho raha hai...</div></div></div>
+    </section>
+
+  </main>
+</div>
+
+<div id="modal"><div class="box" id="modalBox"></div></div>
+<div id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+var firebaseConfig = {
+  apiKey: "AIzaSyB8uGrxTOTE2KixYo9pIR7sJ5Adx1Vfo88",
+  authDomain: "sellix-ff.firebaseapp.com",
+  projectId: "sellix-ff",
+  storageBucket: "sellix-ff.firebasestorage.app",
+  messagingSenderId: "469342363035",
+  appId: "1:469342363035:web:97e2c80ed3a3e107be953e"
+};
+firebase.initializeApp(firebaseConfig);
+var auth = firebase.auth();
+var db = firebase.firestore();
+var TS = firebase.firestore.FieldValue.serverTimestamp;
+
+function $(id){ return document.getElementById(id); }
+function h(tag, attrs){
+  var el = document.createElement(tag);
+  if(attrs) Object.keys(attrs).forEach(function(k){
+    if(k === "class") el.className = attrs[k];
+    else if(k === "text") el.textContent = attrs[k];
+    else if(k.indexOf("on") === 0) el[k] = attrs[k];
+    else el.setAttribute(k, attrs[k]);
+  });
+  for(var i = 2; i < arguments.length; i++){
+    var c = arguments[i];
+    if(c == null) continue;
+    el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return el;
+}
+function toast(t, err){
+  var e = $("toast"); e.textContent = t; e.className = err ? "err" : ""; e.style.display = "block";
+  clearTimeout(toast._t); toast._t = setTimeout(function(){ e.style.display = "none"; }, 2800);
+}
+function showMsg(id, text, kind){
+  var el = $(id); el.innerHTML = "";
+  if(text) el.appendChild(h("div", {"class": "msg " + kind, text: text}));
+}
+function friendlyError(e){
+  var c = (e && e.code) || "", m = (e && e.message) || "";
+  if(/invalid-credential|wrong-password|user-not-found|invalid-login/.test(c)) return "Email ya password galat hai.";
+  if(/invalid-email/.test(c)) return "Email ka format galat hai.";
+  if(/too-many-requests/.test(c)) return "Bahut zyada koshish. Thodi der baad try karo.";
+  if(/network/.test(c)) return "Internet check karo.";
+  if(/permission-denied/.test(c)) return "Permission nahi mili. Firestore Rules check karo (naye rules publish hue?).";
+  return m || "Kuch galat ho gaya.";
+}
+function inr(n){ return "₹" + Number(n || 0).toLocaleString("en-IN"); }
+function fmtDate(s){
+  if(!s) return "-";
+  var p = String(s).split("-");
+  if(p.length !== 3) return s;
+  return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString("en-IN", {day: "numeric", month: "long", year: "numeric"});
+}
+function fmtTs(ts){
+  if(!ts || !ts.toDate) return "-";
+  return ts.toDate().toLocaleString("en-IN", {day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"});
+}
+function millis(x){ return x && x.toMillis ? x.toMillis() : 0; }
+
+/* ---- shared tournament logic ---- */
+function regState(t){
+  var n = t.playerCount || 0, max = t.maxPlayers || 0;
+  if(n >= max) return {open: false, label: "🔴 Registration Closed (Full)"};
+  if(t.registrationClosedManually || !t.registrationOpen) return {open: false, label: "🔴 Registration Closed"};
+  if(t.status !== "upcoming" && t.status !== "live") return {open: false, label: "🔴 Registration Closed"};
+  return {open: true, label: "🟢 Registration Open"};
+}
+function pickCurrent(list){
+  var live = list.filter(function(t){ return t.status === "live"; }).sort(function(a, b){ return millis(b.createdAt) - millis(a.createdAt); });
+  if(live.length) return live[0];
+  var up = list.filter(function(t){ return t.status === "upcoming"; }).sort(function(a, b){ return String(a.tournamentDate || "9999").localeCompare(String(b.tournamentDate || "9999")); });
+  if(up.length) return up[0];
+  return list.slice().sort(function(a, b){ return millis(b.createdAt) - millis(a.createdAt); })[0] || null;
+}
+function statusPill(t){
+  var cls = t.status === "live" ? "live" : (t.status === "upcoming" ? "open" : "other");
+  var txt = {upcoming: "Upcoming", live: "🟢 Live", completed: "Completed", cancelled: "Cancelled"}[t.status] || t.status;
+  return h("span", {"class": "pill " + cls, text: txt});
+}
+
+/* ---- state ---- */
+var tournaments = [], regs = [], itemsSnap = null, proofsSnap = null;
+var selectedTid = null;     // registrations/export selection
+var settingsTid = null;     // null = new
+var unsubs = [];
+var currentView = "dashboard";
+
+/* ---- auth ---- */
+auth.onAuthStateChanged(function(user){
+  if(user){
+    $("loginView").classList.add("hidden");
+    $("appView").classList.remove("hidden");
+    listen();
+  }else{
+    $("appView").classList.add("hidden");
+    $("loginView").classList.remove("hidden");
+    unlisten();
+  }
+});
+$("loginBtn").onclick = async function(){
+  var em = $("email").value.trim(), pw = $("password").value;
+  if(!em || !pw){ showMsg("loginMsg", "Email aur password dono daalo.", "err"); return; }
+  $("loginBtn").disabled = true; showMsg("loginMsg", "", "");
+  try{ await auth.signInWithEmailAndPassword(em, pw); }
+  catch(e){ showMsg("loginMsg", friendlyError(e), "err"); }
+  $("loginBtn").disabled = false;
+};
+$("password").addEventListener("keydown", function(e){ if(e.key === "Enter") $("loginBtn").click(); });
+$("logoutBtn").onclick = function(){ auth.signOut(); };
+
+/* ---- navigation ---- */
+function go(v){
+  currentView = v;
+  document.querySelectorAll("main > section").forEach(function(s){ s.classList.add("hidden"); });
+  $("v-" + v).classList.remove("hidden");
+  document.querySelectorAll(".nav[data-v]").forEach(function(b){ b.classList.toggle("on", b.dataset.v === v); });
+  document.body.classList.remove("open");
+  if(v === "settings") loadSettingsForm(settingsTid);
+  if(v === "registrations") $("rTour").dataset.force = selectedTid || "all";
+  renderAll();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll(".nav[data-v]").forEach(function(b){ b.onclick = function(){ go(b.dataset.v); }; });
+$("burger").onclick = function(){ document.body.classList.toggle("open"); };
+$("overlay").onclick = function(){ document.body.classList.remove("open"); };
+
+/* ---- listeners ---- */
+function listen(){
+  unlisten();
+  unsubs.push(db.collection("tournaments").onSnapshot(function(s){
+    tournaments = s.docs.map(function(d){ var o = d.data(); o.id = d.id; return o; })
+      .sort(function(a, b){ return millis(b.createdAt) - millis(a.createdAt); });
+    if(!selectedTid || !tournaments.some(function(t){ return t.id === selectedTid; })){
+      var c = pickCurrent(tournaments); selectedTid = c ? c.id : null;
+    }
+    renderAll();
+  }, function(e){ toast(friendlyError(e), true); }));
+  unsubs.push(db.collection("registrations").onSnapshot(function(s){
+    regs = s.docs.map(function(d){ var o = d.data(); o.id = d.id; return o; });
+    renderAll();
+  }, function(e){ toast(friendlyError(e), true); }));
+  unsubs.push(db.collection("items").orderBy("createdAt", "desc").onSnapshot(function(s){ itemsSnap = s; renderItems(); },
+    function(e){ $("itemList").textContent = friendlyError(e); }));
+  unsubs.push(db.collection("proofs").orderBy("createdAt", "desc").onSnapshot(function(s){ proofsSnap = s; renderProofs(); },
+    function(e){ $("proofList").textContent = friendlyError(e); }));
+}
+function unlisten(){ unsubs.forEach(function(u){ u(); }); unsubs = []; }
+
+function tName(id){ var t = tournaments.find(function(x){ return x.id === id; }); return t ? t.name : "(deleted)"; }
+
+function renderAll(){
+  renderDashboard();
+  if(currentView === "tournaments") renderTournaments();
+  if(currentView === "registrations") renderRegs();
+  if(currentView === "export") renderExport();
+  if(currentView === "settings") fillPick();
+}
+
+/* ---- dashboard ---- */
+function renderDashboard(){
+  $("sTournaments").textContent = tournaments.length;
+  $("sPlayers").textContent = regs.length;
+  var live = tournaments.filter(function(t){ return t.status === "live"; });
+  $("sLive").textContent = live.length ? live.map(function(t){ return t.name; }).join(", ") : "Koi nahi";
+  var cur = pickCurrent(tournaments);
+  $("sPrize").textContent = cur ? inr(cur.prizePool) : "-";
+  var box = $("currentCard"); box.innerHTML = "";
+  if(!cur){
+    box.appendChild(h("div", {"class": "empty", text: "Abhi koi tournament nahi hai. Tournaments tab se naya banao."}));
+    return;
+  }
+  var n = cur.playerCount || 0, max = cur.maxPlayers || 0, st = regState(cur);
+  var pct = max ? Math.min(100, Math.round(n / max * 100)) : 0;
+  var fill = h("i"); fill.style.width = pct + "%"; if(n >= max) fill.className = "full";
+  box.append(
+    h("div", {"class": "row", style: "justify-content:space-between"}, h("h3", {text: "Current Tournament"}), statusPill(cur)),
+    h("div", {style: "font-size:22px;font-weight:700;margin-top:6px", text: cur.name}),
+    h("div", {style: "margin-top:4px", text: n + " / " + max + " Players" + (n >= max ? " Registered" : "")}),
+    h("div", {"class": "bar"}, fill),
+    h("div", {"class": "kv"},
+      h("div", null, h("span", {text: "Prize Pool"}), inr(cur.prizePool)),
+      h("div", null, h("span", {text: "Tournament Date"}), fmtDate(cur.tournamentDate)),
+      h("div", null, h("span", {text: "Registration"}), h("b", {text: st.label}))
+    ),
+    h("div", {"class": "row", style: "margin-top:14px"},
+      h("button", {text: "Registrations dekho", onclick: function(){ selectedTid = cur.id; go("registrations"); }}),
+      h("button", {"class": "ghost", text: "Settings", onclick: function(){ settingsTid = cur.id; go("settings"); }})
+    )
+  );
+}
+
+/* ---- tournaments list ---- */
+function renderTournaments(){
+  var box = $("tList"); box.innerHTML = "";
+  if(!tournaments.length){ box.appendChild(h("div", {"class": "empty", text: "Koi tournament nahi. \"+ Naya Tournament\" dabao."})); return; }
+  tournaments.forEach(function(t){
+    var n = t.playerCount || 0, max = t.maxPlayers || 0, st = regState(t);
+    var fill = h("i"); fill.style.width = (max ? Math.min(100, Math.round(n / max * 100)) : 0) + "%"; if(n >= max) fill.className = "full";
+    box.appendChild(h("div", {"class": "panel", style: "margin:0"},
+      h("div", {"class": "row", style: "justify-content:space-between"}, h("h3", {text: t.name}), statusPill(t)),
+      h("div", {style: "color:var(--muted);font-size:14px;margin-top:4px", text: fmtDate(t.tournamentDate) + " · " + inr(t.prizePool)}),
+      h("div", {style: "margin-top:8px", text: n + " / " + max + " Players"}),
+      h("div", {"class": "bar"}, fill),
+      h("div", {style: "font-size:14px", text: st.label}),
+      h("div", {"class": "acts2"},
+        h("button", {"class": "sm", text: "Registrations", onclick: function(){ selectedTid = t.id; go("registrations"); }}),
+        h("button", {"class": "sm ghost", text: "Edit", onclick: function(){ settingsTid = t.id; go("settings"); }})
+      )
+    ));
+  });
+}
+$("newTBtn").onclick = function(){ settingsTid = null; go("settings"); };
+
+/* ---- tournament select helper ---- */
+function fillSelect(sel, withAll){
+  var val = sel.value || selectedTid;
+  sel.innerHTML = "";
+  if(withAll) sel.appendChild(h("option", {value: "all", text: "Saare tournaments"}));
+  tournaments.forEach(function(t){ sel.appendChild(h("option", {value: t.id, text: t.name + " (" + (t.playerCount || 0) + "/" + (t.maxPlayers || 0) + ")"})); });
+  var ok = Array.prototype.some.call(sel.options, function(o){ return o.value === val; });
+  sel.value = ok ? val : (withAll ? "all" : (tournaments[0] ? tournaments[0].id : ""));
+}
+
+/* ---- registrations ---- */
+function renderRegs(){
+  var sel = $("rTour");
+  var prev = sel.value;
+  fillSelect(sel, true);
+  var want = sel.dataset.force || prev || selectedTid || "all";
+  delete sel.dataset.force;
+  sel.value = Array.prototype.some.call(sel.options, function(o){ return o.value === want; }) ? want : "all";
+  var tid = sel.value, q = $("rSearch").value.trim().toLowerCase();
+  var list = regs.filter(function(r){ return tid === "all" || r.tournamentId === tid; });
+  var total = list.length;
+  if(q) list = list.filter(function(r){
+    return [r.fullName, r.uid, r.mobile, r.inGameName].some(function(x){ return String(x || "").toLowerCase().indexOf(q) > -1; });
+  });
+  list.sort(function(a, b){ return millis(b.createdAt) - millis(a.createdAt); });
+  var t = tournaments.find(function(x){ return x.id === tid; });
+  $("rCount").textContent = (t ? t.name + ": " + (t.playerCount || 0) + " / " + t.maxPlayers + " players. " : "") + "Dikh rahe: " + list.length + " / " + total;
+  $("rAdd").disabled = tid === "all";
+  var body = $("rBody"); body.innerHTML = "";
+  if(!list.length){
+    body.appendChild(h("tr", null, h("td", {colspan: "8", style: "text-align:center;color:var(--muted);padding:22px", text: "Koi registration nahi mila."})));
+    return;
+  }
+  list.forEach(function(r){
+    body.appendChild(h("tr", null,
+      h("td", {text: r.fullName || ""}), h("td", {text: r.uid || ""}), h("td", {text: r.inGameName || ""}),
+      h("td", {text: r.mobile || ""}), h("td", {text: r.email || "-"}), h("td", {text: tName(r.tournamentId)}),
+      h("td", {text: fmtTs(r.createdAt)}),
+      h("td", {"class": "acts"},
+        h("button", {"class": "sm ghost", text: "Edit", onclick: function(){ openRegModal(r); }}),
+        h("button", {"class": "sm danger", text: "Delete", onclick: function(){ deleteReg(r); }})
+      )
+    ));
+  });
+}
+$("rTour").onchange = function(){ selectedTid = this.value === "all" ? selectedTid : this.value; renderRegs(); };
+$("rSearch").oninput = renderRegs;
+$("rAdd").onclick = function(){ openRegModal(null); };
+
+function closeModal(){ $("modal").classList.remove("on"); }
+$("modal").onclick = function(e){ if(e.target === $("modal")) closeModal(); };
+
+function openRegModal(r){
+  var isNew = !r;
+  var tid = isNew ? $("rTour").value : r.tournamentId;
+  var f = {};
+  function field(label, key, type, val){
+    f[key] = h("input", {type: type || "text", value: val || ""});
+    if(key === "mobile" || key === "uid") f[key].setAttribute("inputmode", "numeric");
+    return [h("label", {text: label}), f[key]];
+  }
+  var msg = h("div");
+  var save = h("button", {text: isNew ? "Player add karo" : "Save karo"});
+  var box = $("modalBox"); box.innerHTML = "";
+  box.append(h("h3", {text: isNew ? "Player add karo" : "Player edit karo", style: "margin-bottom:6px"}));
+  [].concat(
+    field("Full Name", "fullName", "text", r && r.fullName),
+    field("Free Fire UID", "uid", "text", r && r.uid),
+    field("In-Game Name", "inGameName", "text", r && r.inGameName),
+    field("Mobile (10 digit)", "mobile", "tel", r && r.mobile),
+    field("Email", "email", "email", r && r.email)
+  ).forEach(function(n){ box.appendChild(n); });
+  box.append(msg, h("div", {"class": "row", style: "margin-top:16px"}, save, h("button", {"class": "ghost", text: "Cancel", onclick: closeModal})));
+
+  save.onclick = async function(){
+    var d = {
+      fullName: f.fullName.value.trim(), uid: f.uid.value.replace(/\D/g, ""),
+      inGameName: f.inGameName.value.trim(), mobile: f.mobile.value.replace(/\D/g, ""), email: f.email.value.trim()
+    };
+    var bad = null;
+    if(d.fullName.length < 2) bad = "Naam daalo.";
+    else if(d.uid.length < 6 || d.uid.length > 14) bad = "Free Fire UID sahi daalo (6-14 digit).";
+    else if(!d.inGameName) bad = "In-game name daalo.";
+    else if(d.mobile.length !== 10) bad = "Mobile 10 digit ka hona chahiye.";
+    if(bad){ showErr(msg, bad); return; }
+    save.disabled = true;
+    try{
+      if(isNew) await adminAddPlayer(tid, d);
+      else await db.collection("registrations").doc(r.id).update(d);
+      closeModal(); toast(isNew ? "Player add ho gaya" : "Update ho gaya");
+    }catch(e){
+      showErr(msg, e.message === "DUP" ? "Ye UID is tournament mein pehle se registered hai." : friendlyError(e));
+    }
+    save.disabled = false;
+  };
+  $("modal").classList.add("on");
+}
+function showErr(el, text){ el.innerHTML = ""; el.appendChild(h("div", {"class": "msg err", text: text})); }
+
+async function adminAddPlayer(tid, d){
+  var tRef = db.collection("tournaments").doc(tid), rRef = db.collection("registrations").doc(tid + "_" + d.uid);
+  await db.runTransaction(async function(tx){
+    var t = await tx.get(tRef); if(!t.exists) throw new Error("Tournament nahi mila.");
+    var td = t.data();
+    if((td.playerCount || 0) >= td.maxPlayers) throw new Error("Tournament full hai. Pehle Maximum Players badhao.");
+    var ex = await tx.get(rRef); if(ex.exists) throw new Error("DUP");
+    tx.set(rRef, {fullName: d.fullName, uid: d.uid, inGameName: d.inGameName, mobile: d.mobile, email: d.email, tournamentId: tid, createdAt: TS()});
+    tx.update(tRef, {playerCount: (td.playerCount || 0) + 1, lastRegId: d.uid});
+  });
+}
+async function deleteReg(r){
+  if(!confirm("\"" + r.fullName + "\" ko delete karna hai? Ye wapas nahi hoga.")) return;
+  var tRef = db.collection("tournaments").doc(r.tournamentId), rRef = db.collection("registrations").doc(r.id);
+  try{
+    await db.runTransaction(async function(tx){
+      var t = await tx.get(tRef);
+      tx.delete(rRef);
+      if(t.exists) tx.update(tRef, {playerCount: Math.max(0, (t.data().playerCount || 0) - 1)});
+    });
+    toast("Delete ho gaya");
+  }catch(e){ toast(friendlyError(e), true); }
+}
+
+/* ---- settings ---- */
+function fillPick(){
+  var sel = $("setPick"); sel.innerHTML = "";
+  sel.appendChild(h("option", {value: "", text: "➕ Naya tournament"}));
+  tournaments.forEach(function(t){ sel.appendChild(h("option", {value: t.id, text: t.name})); });
+  sel.value = settingsTid || "";
+}
+function loadSettingsForm(tid){
+  settingsTid = tid || null;
+  fillPick();
+  var t = tournaments.find(function(x){ return x.id === settingsTid; });
+  if(settingsTid && !t){ settingsTid = null; }
+  $("setTitle").textContent = t ? "Tournament Settings: " + t.name : "Naya Tournament";
+  $("sName").value = t ? t.name : ""; $("sPrizeIn").value = t ? t.prizePool : ""; $("sMax").value = t ? t.maxPlayers : 50;
+  $("sDate").value = t ? (t.tournamentDate || "") : ""; $("sStatus").value = t ? t.status : "upcoming";
+  $("sReg").value = t && (t.registrationClosedManually || !t.registrationOpen) ? "closed" : "open";
+  $("sDelete").classList.toggle("hidden", !t);
+  showMsg("sMsg", "", "");
+}
+$("setPick").onchange = function(){ loadSettingsForm(this.value || null); };
+$("sSave").onclick = async function(){
+  var name = $("sName").value.trim(), prize = Number($("sPrizeIn").value), max = parseInt($("sMax").value, 10), date = $("sDate").value;
+  if(!name){ showMsg("sMsg", "Tournament ka naam daalo.", "err"); return; }
+  if($("sPrizeIn").value === "" || !(prize >= 0)){ showMsg("sMsg", "Prize pool daalo.", "err"); return; }
+  if(!(max >= 1)){ showMsg("sMsg", "Maximum players kam se kam 1 hona chahiye.", "err"); return; }
+  if(!date){ showMsg("sMsg", "Tournament ki date chuno.", "err"); return; }
+  var closed = $("sReg").value === "closed";
+  var data = {name: name, prizePool: prize, maxPlayers: max, tournamentDate: date, status: $("sStatus").value,
+    registrationOpen: !closed, registrationClosedManually: closed};
+  $("sSave").disabled = true;
+  try{
+    if(settingsTid){
+      await db.collection("tournaments").doc(settingsTid).update(data);
+      toast("Settings save ho gayi");
+    }else{
+      data.playerCount = 0; data.createdAt = TS();
+      var ref = await db.collection("tournaments").add(data);
+      settingsTid = ref.id; selectedTid = ref.id;
+      toast("Tournament ban gaya");
+    }
+    showMsg("sMsg", "", "");
+  }catch(e){ showMsg("sMsg", friendlyError(e), "err"); }
+  $("sSave").disabled = false;
+};
+$("sDelete").onclick = async function(){
+  var t = tournaments.find(function(x){ return x.id === settingsTid; }); if(!t) return;
+  if(!confirm("\"" + t.name + "\" aur uske saare registrations hamesha ke liye delete honge. Pakka?")) return;
+  $("sDelete").disabled = true;
+  try{
+    var snap = await db.collection("registrations").where("tournamentId", "==", t.id).get();
+    var docs = snap.docs;
+    for(var i = 0; i < docs.length; i += 400){
+      var b = db.batch(); docs.slice(i, i + 400).forEach(function(d){ b.delete(d.ref); }); await b.commit();
+    }
+    await db.collection("tournaments").doc(t.id).delete();
+    settingsTid = null; toast("Tournament delete ho gaya"); go("tournaments");
+  }catch(e){ showMsg("sMsg", friendlyError(e), "err"); }
+  $("sDelete").disabled = false;
+};
+
+/* ---- export csv ---- */
+function renderExport(){
+  var sel = $("eTour"); var prev = sel.value; fillSelect(sel, false);
+  if(prev && Array.prototype.some.call(sel.options, function(o){ return o.value === prev; })) sel.value = prev;
+  else if(selectedTid) sel.value = selectedTid;
+  var n = regs.filter(function(r){ return r.tournamentId === sel.value; }).length;
+  $("eInfo").textContent = sel.value ? n + " registrations export honge." : "Pehle tournament banao.";
+  $("eBtn").disabled = !sel.value || !n;
+}
+$("eTour").onchange = function(){ selectedTid = this.value; renderExport(); };
+function csvCell(v){
+  var s = String(v == null ? "" : v);
+  if(/^[=+\-@\t\r]/.test(s)) s = "'" + s;           // spreadsheet formula injection guard
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+$("eBtn").onclick = function(){
+  var tid = $("eTour").value, t = tournaments.find(function(x){ return x.id === tid; });
+  var rows = regs.filter(function(r){ return r.tournamentId === tid; }).sort(function(a, b){ return millis(a.createdAt) - millis(b.createdAt); });
+  if(!rows.length){ toast("Export ke liye koi registration nahi.", true); return; }
+  var out = [["Full Name", "Free Fire UID", "In-Game Name", "Mobile", "Email", "Tournament", "Registered At"]];
+  rows.forEach(function(r){ out.push([r.fullName, r.uid, r.inGameName, r.mobile, r.email, t ? t.name : "", r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toISOString() : ""]); });
+  var csv = "\uFEFF" + out.map(function(r){ return r.map(csvCell).join(","); }).join("\r\n");
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv;charset=utf-8"}));
+  a.download = ((t ? t.name : "registrations").replace(/[^\w\-]+/g, "_")) + "_registrations.csv";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+  toast("CSV download ho rahi hai");
+};
+
+/* ---- image helper ---- */
+function compressImage(file, maxSide, quality){
+  return new Promise(function(resolve, reject){
+    var reader = new FileReader();
+    reader.onerror = function(){ reject(new Error("Photo padh nahi paye.")); };
+    reader.onload = function(){
+      var img = new Image();
+      img.onerror = function(){ reject(new Error("Ye photo khul nahi rahi.")); };
+      img.onload = function(){
+        var s = Math.min(1, maxSide / Math.max(img.width, img.height));
+        var c = document.createElement("canvas"); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL("image/jpeg", quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function renderThumbs(el, list){ el.innerHTML = ""; list.forEach(function(s){ el.appendChild(h("img", {src: s, alt: ""})); }); }
+
+/* ---- items (existing feature) ---- */
+var editingId = null, editingPhotos = [], newPhotos = [], proofPhoto = "";
+$("iPhotos").onchange = async function(e){
+  var files = Array.from(e.target.files).slice(0, 3);
+  if(e.target.files.length > 3) toast("Sirf pehli 3 photos li gayi.", true);
+  try{
+    newPhotos = [];
+    for(var i = 0; i < files.length; i++) newPhotos.push(await compressImage(files[i], 700, 0.6));
+    renderThumbs($("iThumbs"), newPhotos);
+  }catch(err){ showMsg("itemMsg", err.message, "err"); }
+};
+function resetItemForm(){
+  editingId = null; editingPhotos = []; newPhotos = [];
+  $("iTitle").value = ""; $("iPrice").value = ""; $("iDesc").value = ""; $("iPhotos").value = ""; $("iSold").checked = false;
+  $("iThumbs").innerHTML = ""; $("itemFormTitle").textContent = "Naya item add karo"; $("itemSaveBtn").textContent = "Item save karo";
+  $("itemCancelBtn").classList.add("hidden"); showMsg("itemMsg", "", "");
+}
+$("itemCancelBtn").onclick = resetItemForm;
+$("itemSaveBtn").onclick = async function(){
+  var title = $("iTitle").value.trim(), price = Number($("iPrice").value);
+  if(!title){ showMsg("itemMsg", "Item ka naam daalo.", "err"); return; }
+  if($("iPrice").value === "" || !(price >= 0)){ showMsg("itemMsg", "Price daalo.", "err"); return; }
+  var photos = newPhotos.length ? newPhotos : editingPhotos;
+  if(photos.reduce(function(n, s){ return n + s.length; }, 0) > 850000){ showMsg("itemMsg", "Photos bahut badi hain. Kam ya chhoti photos chuno.", "err"); return; }
+  var data = {title: title, price: price, desc: $("iDesc").value.trim(), photos: photos, sold: $("iSold").checked};
+  $("itemSaveBtn").disabled = true;
+  try{
+    if(editingId){ await db.collection("items").doc(editingId).update(data); toast("Item update ho gaya"); }
+    else{ data.createdAt = TS(); await db.collection("items").add(data); toast("Item add ho gaya"); }
+    resetItemForm();
+  }catch(e){ showMsg("itemMsg", friendlyError(e), "err"); }
+  $("itemSaveBtn").disabled = false;
+};
+function renderItems(){
+  var box = $("itemList"); box.innerHTML = "";
+  if(!itemsSnap || itemsSnap.empty){ box.appendChild(h("div", {"class": "empty", text: "Abhi koi item nahi hai."})); return; }
+  itemsSnap.forEach(function(doc){
+    var it = doc.data();
+    var badge = h("span", {text: it.sold ? "Sold" : "Available", "class": "pill " + (it.sold ? "closed" : "open"), style: "margin-left:6px;font-size:12px"});
+    box.appendChild(h("div", {"class": "item"},
+      h("img", {alt: "", src: (it.photos && it.photos[0]) || "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="}),
+      h("div", {"class": "info"},
+        h("div", {"class": "t"}, it.title || "(naam nahi)", badge),
+        h("div", {"class": "m", text: inr(it.price) + (it.desc ? " · " + it.desc : "")}),
+        h("div", {"class": "acts2"},
+          h("button", {"class": "sm ghost", text: it.sold ? "Available karo" : "Sold mark karo", onclick: async function(){
+            try{ await db.collection("items").doc(doc.id).update({sold: !it.sold}); toast("Update ho gaya"); }catch(e){ toast(friendlyError(e), true); } }}),
+          h("button", {"class": "sm ghost", text: "Edit", onclick: function(){
+            editingId = doc.id; editingPhotos = it.photos || []; newPhotos = [];
+            $("iTitle").value = it.title || ""; $("iPrice").value = it.price == null ? "" : it.price; $("iDesc").value = it.desc || "";
+            $("iSold").checked = !!it.sold; $("iPhotos").value = ""; renderThumbs($("iThumbs"), editingPhotos);
+            $("itemFormTitle").textContent = "Item edit karo"; $("itemSaveBtn").textContent = "Changes save karo";
+            $("itemCancelBtn").classList.remove("hidden"); showMsg("itemMsg", "Nayi photos na chuno to purani photos rahengi.", "ok");
+            window.scrollTo({top: 0, behavior: "smooth"}); }}),
+          h("button", {"class": "sm danger", text: "Delete", onclick: async function(){
+            if(!confirm("Ye item hamesha ke liye delete ho jayega. Pakka?")) return;
+            try{ await db.collection("items").doc(doc.id).delete(); toast("Delete ho gaya"); }catch(e){ toast(friendlyError(e), true); } }})
+        )
+      )
+    ));
+  });
+}
+
+/* ---- proofs (existing feature) ---- */
+$("pPhoto").onchange = async function(e){
+  var f = e.target.files[0]; proofPhoto = "";
+  if(!f){ $("pThumbs").innerHTML = ""; return; }
+  try{ proofPhoto = await compressImage(f, 700, 0.6); renderThumbs($("pThumbs"), [proofPhoto]); }
+  catch(err){ showMsg("proofMsg", err.message, "err"); }
+};
+$("proofSaveBtn").onclick = async function(){
+  var name = $("pName").value.trim(), text = $("pText").value.trim();
+  if(!name && !text && !proofPhoto){ showMsg("proofMsg", "Naam, review ya screenshot mein se kuch to daalo.", "err"); return; }
+  $("proofSaveBtn").disabled = true;
+  try{
+    await db.collection("proofs").add({name: name, text: text, photo: proofPhoto, createdAt: TS()});
+    $("pName").value = ""; $("pText").value = ""; $("pPhoto").value = ""; $("pThumbs").innerHTML = ""; proofPhoto = "";
+    showMsg("proofMsg", "", ""); toast("Proof add ho gaya");
+  }catch(e){ showMsg("proofMsg", friendlyError(e), "err"); }
+  $("proofSaveBtn").disabled = false;
+};
+function renderProofs(){
+  var box = $("proofList"); box.innerHTML = "";
+  if(!proofsSnap || proofsSnap.empty){ box.appendChild(h("div", {"class": "empty", text: "Abhi koi proof nahi hai."})); return; }
+  proofsSnap.forEach(function(doc){
+    var p = doc.data();
+    var img = h("img", {alt: "", src: p.photo || "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="});
+    if(!p.photo) img.style.visibility = "hidden";
+    box.appendChild(h("div", {"class": "item"}, img,
+      h("div", {"class": "info"},
+        h("div", {"class": "t", text: p.name || "(naam nahi)"}), h("div", {"class": "m", text: p.text || ""}),
+        h("div", {"class": "acts2"}, h("button", {"class": "sm danger", text: "Delete", onclick: async function(){
+          if(!confirm("Ye proof delete karna hai?")) return;
+          try{ await db.collection("proofs").doc(doc.id).delete(); toast("Delete ho gaya"); }catch(e){ toast(friendlyError(e), true); } }}))
+      )
+    ));
+  });
+}
+</script>
+</body>
+</html>
