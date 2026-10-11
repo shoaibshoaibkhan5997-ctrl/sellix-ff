@@ -14,6 +14,7 @@ function loadSettingsForm(tid){
   $("sName").value = t ? t.name : ""; $("sPrizeIn").value = t ? t.prizePool : ""; $("sEntry").value = t ? (t.entryFee || 0) : 0; $("sMax").value = t ? t.maxPlayers : 50;
   $("sDate").value = t ? (t.tournamentDate || "") : ""; $("sStatus").value = t ? t.status : "upcoming";
   $("sReg").value = t && (t.registrationClosedManually || !t.registrationOpen) ? "closed" : "open";
+  $("sMatchType").value = (t && t.matchType) ? t.matchType : "Solo";
   $("sDelete").classList.toggle("hidden", !t);
   showMsg("sMsg", "", "");
 }
@@ -29,6 +30,7 @@ $("sSave").onclick = async function(){
   var closed = $("sReg").value === "closed";
   var data = {name: name, prizePool: prize, entryFee: entry, maxPlayers: max, tournamentDate: date, status: $("sStatus").value,
     registrationOpen: !closed, registrationClosedManually: closed};
+  data.matchType = $("sMatchType").value;
   $("sSave").disabled = true;
   try{
     if(settingsTid){
