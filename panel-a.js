@@ -1,4 +1,3 @@
-
 var firebaseConfig = {
   apiKey: "AIzaSyB8uGrxTOTE2KixYo9pIR7sJ5Adx1Vfo88",
   authDomain: "sellix-ff.firebaseapp.com",
@@ -169,6 +168,7 @@ function renderDashboard(){
     h("div", {style: "margin-top:4px", text: n + " / " + max + " Players" + (n >= max ? " Registered" : "")}),
     h("div", {"class": "bar"}, fill),
     h("div", {"class": "kv"},
+      h("div", null, h("span", {text: "Match Type"}), cur.matchType || "Solo"),
       h("div", null, h("span", {text: "Prize Pool"}), inr(cur.prizePool)),
       h("div", null, h("span", {text: "Entry Fee"}), feeText(cur)),
       h("div", null, h("span", {text: "Tournament Date"}), fmtDate(cur.tournamentDate)),
@@ -191,6 +191,7 @@ function renderTournaments(){
     box.appendChild(h("div", {"class": "panel", style: "margin:0"},
       h("div", {"class": "row", style: "justify-content:space-between"}, h("h3", {text: t.name}), statusPill(t)),
       h("div", {style: "color:var(--muted);font-size:14px;margin-top:4px", text: fmtDate(t.tournamentDate) + " · Prize " + inr(t.prizePool) + " · Entry " + feeText(t)}),
+      h("div", {style: "font-size:14px;margin-top:4px", text: "Match Type: " + (t.matchType || "Solo")}),
       h("div", {style: "margin-top:8px", text: n + " / " + max + " Players"}),
       h("div", {"class": "bar"}, fill),
       h("div", {style: "font-size:14px", text: st.label}),
@@ -324,5 +325,4 @@ async function deleteReg(r){
     });
     toast("Delete ho gaya");
   }catch(e){ toast(friendlyError(e), true); }
-    }
-  
+}
